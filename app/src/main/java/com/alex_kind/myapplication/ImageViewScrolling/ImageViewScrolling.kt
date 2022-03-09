@@ -7,56 +7,55 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.alex_kind.myapplication.R
-import kotlinx.android.synthetic.main.image_view_scrolling.view.*
+import com.alex_kind.myapplication.databinding.ImageViewScrollingBinding
 
 class ImageViewScrolling(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
 
-    internal lateinit var eventEnd: IEventEnd
-    internal var lastResult = 0
-    internal var oldValue = 0
+    private lateinit var eventEnd: IEventEnd
+    private var binding: ImageViewScrollingBinding =
+        ImageViewScrollingBinding.inflate(LayoutInflater.from(context))
+
+    private var lastResult = 0
+    private var oldValue = 0
 
     companion object {
         private const val ANIMATION_DURATION = 150
     }
 
     val value: Int
-        get() = Integer.parseInt(nextImage.tag.toString())
+        get() = Integer.parseInt(binding.nextImage.tag.toString())
 
     fun setEventEnd(eventEnd: IEventEnd) {
         this.eventEnd = eventEnd
     }
 
     init {
-        init(context)
+        addView(binding.root)
     }
 
-    private fun init(context: Context) {
-        LayoutInflater.from(context).inflate(R.layout.image_view_scrolling, this)
-        nextImage.translationY = height.toFloat()
-    }
 
     fun setRandomValue(image: Int, numRoll: Int) {
-        currentImage.animate()
+        binding.currentImage.animate()
             .translationY(-height.toFloat())
             .setDuration(ANIMATION_DURATION.toLong()).start()
 
-        nextImage.translationY = nextImage.height.toFloat()
-        nextImage.animate()
+        binding.nextImage.translationY = binding.nextImage.height.toFloat()
+        binding.nextImage.animate()
             .translationY(0f).setDuration(ANIMATION_DURATION.toLong())
             .setListener(object : Animator.AnimatorListener {
                 override fun onAnimationRepeat(p0: Animator?) {
                 }
 
                 override fun onAnimationEnd(p0: Animator?) {
-                    setImage(currentImage, oldValue % 6)
-                    currentImage.translationY = 0f
+                    setImage(binding.currentImage, oldValue % 6)
+                    binding.currentImage.translationY = 0f
                     if (oldValue != numRoll) {
                         setRandomValue(image, numRoll)
                         oldValue++
                     } else {
                         lastResult = 0
                         oldValue = 0
-                        setImage(nextImage, image)
+                        setImage(binding.nextImage, image)
                         eventEnd.eventEnd(image % 6, numRoll)
 
                     }

@@ -1,19 +1,22 @@
 package com.alex_kind.myapplication
 
-import android.net.Uri
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.view.View
-import android.widget.MediaController
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.alex_kind.myapplication.ImageViewScrolling.IEventEnd
 import com.alex_kind.myapplication.databinding.ActivityMainBinding
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity(), IEventEnd {
     lateinit var bind: ActivityMainBinding
     var count_down = 0
+    var sharedPreferences: SharedPreferences? = null
+    var sharedEditor: SharedPreferences.Editor? = null
+
+
+    private var score = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,40 +24,96 @@ class MainActivity : AppCompatActivity(), IEventEnd {
         bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
+        if (savedInstanceState == null) {
+            checkFirstRun()
+        }
+
+        loadData()
+
         bind.image1.setEventEnd(this@MainActivity)
         bind.image2.setEventEnd(this@MainActivity)
         bind.image3.setEventEnd(this@MainActivity)
 
         tap()
+
+        addScore()
     }
 
-    private fun tap() {
-        bind.buttonPush.setOnClickListener {
-            if (Common.SCORE >= 50) {
+    private fun addScore() {
+        bind.buttonAdd.setOnClickListener {
+            score += 100
+            saveData()
+            bind.txtScore.text = score.toString()
+        }
+    }
 
-                bind.image1.setRandomValue(Random.nextInt(6), Random.nextInt(10) + 5)
-                bind.image2.setRandomValue(Random.nextInt(6), Random.nextInt(15) + 15)
-                bind.image3.setRandomValue(Random.nextInt(6), Random.nextInt(20) + 30)
+    private fun checkFirstRun() {
 
-                Common.SCORE -= 50
-                bind.txtScore.text = Common.SCORE.toString()
-
-            } else {
-                Toast.makeText(applicationContext, "Not enough money", Toast.LENGTH_SHORT).show()
-            }
-
+        sharedPreferences = getPreferences(MODE_PRIVATE)
+        sharedEditor = sharedPreferences!!.edit()
+        if (isFirstRun()) {
+            score = 100
+            saveData()
         }
     }
 
 
-    private fun video() {
-        bind.videoView.visibility = View.VISIBLE
-        val link = "https://www.youtube.com/watch?v=r3uus133dDs"
-        val video = bind.videoView
-        video.setVideoURI(Uri.parse(link))
-        video.setMediaController(MediaController(this))
-        video.requestFocus(0)
-        video.start()
+    private fun isFirstRun(): Boolean {
+        return if (sharedPreferences!!.getBoolean("firstTime", true)) {
+            sharedEditor!!.putBoolean("firstTime", false)
+            sharedEditor!!.apply()
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun saveData() {
+        val sharedPreferences = getSharedPreferences(
+            "sharedPrefs",
+            Context.MODE_PRIVATE
+        )
+        val editor = sharedPreferences.edit()
+        editor.apply {
+            putInt("STRING_KEY", score).apply()
+        }
+    }
+
+    private fun loadData() {
+
+        val sharedPreferences = getSharedPreferences(
+            "sharedPrefs",
+            Context.MODE_PRIVATE
+        )
+        val savedString = sharedPreferences.getInt(
+            "STRING_KEY",
+            0
+        )
+        score = savedString
+        bind.txtScore.text = savedString.toString()
+    }
+
+
+    private fun tap() {
+
+        bind.buttonPush.setOnClickListener {
+
+            if (score >= 50) {
+
+                bind.image1.setRandomValue(Random.nextInt(6), Random.nextInt(10) + 5)
+                bind.image2.setRandomValue(Random.nextInt(6), Random.nextInt(10) + 10)
+                bind.image3.setRandomValue(Random.nextInt(6), Random.nextInt(10) + 15)
+
+                score -= 50
+                saveData()
+                bind.txtScore.text = score.toString()
+
+            } else {
+                Toast.makeText(applicationContext, "Not enough money", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
     }
 
 
@@ -66,16 +125,20 @@ class MainActivity : AppCompatActivity(), IEventEnd {
 
             if (bind.image1.value == bind.image2.value && bind.image2.value == bind.image3.value) {
                 Toast.makeText(applicationContext, "You win BIG prize", Toast.LENGTH_SHORT).show()
-                Common.SCORE += 300
-                bind.txtScore.text = Common.SCORE.toString()
+                score += 300
+                saveData()
+                bind.txtScore.text = score.toString()
+
             } else if (bind.image1.value == bind.image2.value ||
                 bind.image2.value == bind.image3.value ||
                 bind.image1.value == bind.image3.value
             ) {
 
                 Toast.makeText(applicationContext, "You win SMALL prize", Toast.LENGTH_SHORT).show()
-                Common.SCORE += 100
-                bind.txtScore.text = Common.SCORE.toString()
+                score += 100
+                saveData()
+                bind.txtScore.text = score.toString()
+
             } else {
                 Toast.makeText(applicationContext, "You lose", Toast.LENGTH_SHORT).show()
             }
