@@ -3,6 +3,7 @@ package com.alex_kind.myapplication
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.alex_kind.myapplication.ImageViewScrolling.IEventEnd
@@ -11,7 +12,7 @@ import kotlin.random.Random
 
 class MainActivity : AppCompatActivity(), IEventEnd {
     lateinit var bind: ActivityMainBinding
-    var count_down = 0
+    private var countDown = 0
     var sharedPreferences: SharedPreferences? = null
     var sharedEditor: SharedPreferences.Editor? = null
 
@@ -99,6 +100,7 @@ class MainActivity : AppCompatActivity(), IEventEnd {
         bind.buttonPush.setOnClickListener {
 
             if (score >= 50) {
+                bind.buttonPush.visibility = View.GONE
 
                 bind.image1.setRandomValue(Random.nextInt(6), Random.nextInt(10) + 5)
                 bind.image2.setRandomValue(Random.nextInt(6), Random.nextInt(10) + 10)
@@ -118,10 +120,11 @@ class MainActivity : AppCompatActivity(), IEventEnd {
 
 
     override fun eventEnd(result: Int, count: Int) {
-        if (count_down < 2) {
-            count_down++
+        if (countDown < 2) {
+            countDown++
         } else {
-            count_down = 0
+            countDown = 0
+            bind.buttonPush.visibility = View.VISIBLE
 
             if (bind.image1.value == bind.image2.value && bind.image2.value == bind.image3.value) {
                 Toast.makeText(applicationContext, "You win BIG prize", Toast.LENGTH_SHORT).show()
